@@ -1,31 +1,49 @@
 import os
-import sui_trader
-from dotenv import load_dotenv
+import logging
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from apscheduler.schedulers.background import BackgroundScheduler
-from telegram.ext import ApplicationBuilder, CommandHandler
+from dotenv import load_dotenv
+from sui_trader import execute_trade_logic
 
+# Load .env
 load_dotenv()
+
+# Environment variables
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-async def start(update, ctx): await update.message.reply_text("🚀 Raider Swing Bot is online.")
-async def trade(update, ctx): await update.message.reply_text(f"🟢 Trade Result:\n{sui_trader.perform_trade()}")
-async def status(update, ctx):
-    amount_out, fee = sui_trader.fetch_price()
-    await update.message.reply_text(f"1 SUI → {amount_out} USDC; est. fee {fee} SUI")
+# Logger setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("trade", trade))
-app.add_handler(CommandHandler("status", status))
+# Command handlers
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🤖 Raider Bot Activated!")
 
-def auto_trade():
-    res = sui_trader.perform_trade()
-    app.bot.send_message(chat_id=CHAT_ID, text=f"⏰ Auto Trade Result:\n{res}")
+async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    result = await execute_trade_logic()
+    await update.message.reply_text(f"Trade Result: {result}")
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(auto_trade, 'interval', hours=6)
-scheduler.start()
+# Main app
+async def scheduled_trade():
+    result = await execute_trade_logic()
+    logger.info(f"[Scheduled] Trade Result: {result}")
+
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("trade", trade))
+
+    # Scheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(scheduled_trade, trigger="interval", hours=6)
+    scheduler.start()
+
+    logger.info("Bot running...")
+    app.run_polling()
 
 if __name__ == "__main__":
-    app.run_polling()
+    main()
+
