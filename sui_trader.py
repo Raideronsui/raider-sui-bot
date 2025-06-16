@@ -21,7 +21,7 @@ def sign_and_send_swap(token_in="SUI", token_out="USDC", amount=1_000_000, slipp
     # TODO: SIGN & SEND using Sui SDK instead of Web3
     raise NotImplementedError("Please integrate Sui SDK signing here")
 
-def perform_trade():
+def execute_trade_logic():
     amount_out, fee = fetch_price()
     tx_hash = sign_and_send_swap()
     return f"Swapped 1 SUI → {amount_out} USDC; Fee: {fee} SUI; TxHash: {tx_hash}"
