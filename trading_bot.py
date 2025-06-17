@@ -1,49 +1,30 @@
-import os
-import logging
+from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from apscheduler.schedulers.background import BackgroundScheduler
-from dotenv import load_dotenv
-import asyncio
-from sui_trader import execute_trade_logic
+import os
 
-# Load .env
-load_dotenv()
+TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}/webhook"
 
-# Environment variables
-TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
+app = Flask(__name__)
+telegram_app = ApplicationBuilder().token(TOKEN).build()
 
-# Logger setup
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Command handlers
+# Example command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("~V Raider Bot Activated!")
+    await update.message.reply_text("Hello from webhook!")
 
-async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = await execute_trade_logic()
-    await update.message.reply_text(f"Trade Result: {result}")
+telegram_app.add_handler(CommandHandler("start", start))
 
-# Scheduled trade wrapper
-def run_scheduled_trade():
-    asyncio.run(execute_trade_logic())
+@app.route("/webhook", methods=["POST"])
+async def webhook():
+    data = request.get_json(force=True)
+    update = Update.de_json(data, telegram_app.bot)
+    await telegram_app.process_update(update)
+    return "ok"
 
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+@app.before_first_request
+def set_webhook():
+    telegram_app.bot.set_webhook(WEBHOOK_URL)
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("trade", trade))
-
-    # Scheduler
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(run_scheduled_trade, trigger="interval", hours=6)
-    scheduler.start()
-
-    logger.info("Bot running...")
-    app.run_polling()
-
-if __name__ == '__main__':
-    main()
-
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
