@@ -1,12 +1,2 @@
-services:
-  - type: web
-    name: raider-sui-bot
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python trading_bot.py"
-    envVars:
-      - key: TELEGRAM_TOKEN
-        sync: false
-      - key: CHAT_ID
-        sync: false
-
+entrypoint: python trading_bot.py
+pythonVersion: 3.11.6
