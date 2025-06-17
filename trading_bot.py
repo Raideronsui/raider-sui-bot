@@ -1,6 +1,5 @@
 import os
 import logging
-from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
@@ -44,6 +43,6 @@ def main():
     logger.info("Bot running...")
     app.run_polling()
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run_polling()
 
