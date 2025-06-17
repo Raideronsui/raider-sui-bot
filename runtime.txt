@@ -1,5 +1,1 @@
-rm runtime
-echo "python-3.11.6" > runtime.txt
-git add runtime.txt
-git commit -m "Fix runtime.txt to set Python version"
-git push origin main
+python-3.11.6
