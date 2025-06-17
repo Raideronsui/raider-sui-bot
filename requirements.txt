@@ -1,6 +1,8 @@
 python-telegram-bot==20.8
-Flask>=2.2.5
+flask
 gunicorn
-python-dotenv
 requests
+python-dotenv
+apscheduler
+httpx
 
