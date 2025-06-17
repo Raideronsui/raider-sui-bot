@@ -27,3 +27,13 @@ def set_moon_mode(user_id: int, enabled: bool):
 
 def is_moon_mode(user_id: int) -> bool:
     return user_moon_mode[user_id]
+
+from datetime import time
+import os
+
+def parse_time_string(t: str) -> time:
+    hour, minute = map(int, t.split(":"))
+    return time(hour=hour, minute=minute)
+
+SCHEDULED_TRADE_TIME_EST = parse_time_string(os.getenv("SCHEDULED_TRADE_TIME_EST", "09:00"))
+
