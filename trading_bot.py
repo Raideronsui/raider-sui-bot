@@ -1,10 +1,7 @@
 import os
 from flask import Flask, request
 from telegram import Update
-from telegram.ext import
-    ApplicationBuilder,
-    CommandHandler,
-    ContextTypes,
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from dotenv import load_dotenv
 from sui_trader import execute_trade_logic
