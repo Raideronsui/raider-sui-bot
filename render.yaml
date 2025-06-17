@@ -1,4 +1,4 @@
-startCommand: gunicorn trading_bot:flask_app --bind 0.0.0.0:$PORT
+startCommand: gunicorn trading_bot:flask_app
 entrypoint: gunicorn trading_bot:flask_app
 pythonVersion: 3.11.6
 

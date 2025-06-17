@@ -1,7 +1,6 @@
 import requests
-from datetime import datetime
-import time
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 # === ENV SETUP ===
@@ -15,20 +14,8 @@ QUOTE_TOKEN = "0xabc...xyz"  # Replace with actual token
 TRADE_PAIR = f"{BASE_TOKEN}-{QUOTE_TOKEN}"
 CETUS_API_URL = "https://api-sui.cetus.zone/v2/swap/price"
 
-# === TELEGRAM ===
-def send_telegram_alert(message):
-    """Send a Telegram alert via bot."""
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": message}
-    try:
-        response = requests.post(url, data=payload)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"[!] Failed to send Telegram alert: {e}")
-
 # === PRICE FETCH ===
 def fetch_price():
-    """Get current price estimate from Cetus."""
     params = {
         "inputCoin": BASE_TOKEN,
         "outputCoin": QUOTE_TOKEN,
@@ -40,35 +27,31 @@ def fetch_price():
         data = response.json()
         return float(data["data"]["estimatedAmountOut"]) / 1e9
     except Exception as e:
-        print(f"[{datetime.now()}] Failed to fetch price: {e}")
         return None
 
-# === LOGIC ===
-def should_buy(price_history):
-    return len(price_history) >= 3 and price_history[-1] < min(price_history[-3:-1]) * 0.98
+# === SIMPLE STRATEGY ===
+def analyze_trend(prices):
+    if len(prices) < 3:
+        return "Not enough data"
+    if prices[-1] < min(prices[-3:-1]) * 0.98:
+        return f"📉 BUY signal at {prices[-1]:.5f} SUI"
+    elif prices[-1] > max(prices[-3:-1]) * 1.02:
+        return f"📈 SELL signal at {prices[-1]:.5f} SUI"
+    else:
+        return f"🤖 HOLD — Latest price: {prices[-1]:.5f} SUI"
 
-def should_sell(price_history):
-    return len(price_history) >= 3 and price_history[-1] > max(price_history[-3:-1]) * 1.02
-
-# === MAIN ENTRY ===
+# === MAIN ENTRY FOR TELEGRAM ===
 def execute_trade_logic():
-    price_history = []
-    send_telegram_alert("🟢 Raider Bot started swing trading 🪙")
-    
-    while True:
-        price = fetch_price()
-        if price:
-            print(f"[{datetime.now()}] Price: {price}")
-            price_history.append(price)
-            
-            if should_buy(price_history):
-                msg = f"📉 BUY signal! Price dipped to {price:.5f} SUI"
-                print(msg)
-                send_telegram_alert(msg)
-                
-            elif should_sell(price_history):
-                msg = f"📈 SELL signal! Price jumped to {price:.5f} SUI"
-                print(msg)
-                send_telegram_alert(msg)
+    prices = []
 
-        time.sleep(60)
+    # Simulate recent history
+    for _ in range(3):
+        p = fetch_price()
+        if p:
+            prices.append(p)
+
+    if not prices or len(prices) < 3:
+        return "⚠️ Not enough price data to analyze."
+
+    return analyze_trend(prices)
+
