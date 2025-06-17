@@ -1,2 +1,2 @@
-entrypoint: python trading_bot.py
+entrypoint: gunicorn trading_bot:app
 pythonVersion: 3.11.6
