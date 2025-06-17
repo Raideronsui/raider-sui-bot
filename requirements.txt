@@ -1,5 +1,2 @@
-python-telegram-bot==20.8
-APScheduler
-requests
-python-dotenv
-# sui-py  # Uncomment once you're ready to integrate real Sui SDK
+flask
+gunicorn
