@@ -1,57 +1,60 @@
-import requests
 import os
+import requests
 from datetime import datetime
-from dotenv import load_dotenv
+from config import (
+    TRADE_THRESHOLD_PERCENT,
+    TAKE_PROFIT_PERCENT,
+    STOP_LOSS_PERCENT,
+    ALERTS_ONLY_MODE,
+    ENABLE_LUNAR_MODE,
+)
 
-# === ENV SETUP ===
-load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
+def get_price_from_cetus():
+    response = requests.get(f"{os.getenv('CETUS_API')}/v2/swap/quote?inputCoinType=0x2::sui::SUI&outputCoinType=0x2::usdt::USDT&amount=100000000")
+    data = response.json()
+    return float(data.get('estimatedAmountOut', 0)) / 1e6  # assuming USDT 6 decimals
 
-# === CETUS CONFIG ===
-BASE_TOKEN = "0x2::sui::SUI"
-QUOTE_TOKEN = "0xabc...xyz"  # Replace with actual token
-TRADE_PAIR = f"{BASE_TOKEN}-{QUOTE_TOKEN}"
-CETUS_API_URL = "https://api-sui.cetus.zone/v2/swap/price"
+def moon_phase_today():
+    # Placeholder lunar logic
+    phases = ["🌑 New Moon", "🌓 First Quarter", "🌕 Full Moon", "🌗 Last Quarter"]
+    return phases[datetime.utcnow().day % 4]
 
-# === PRICE FETCH ===
-def fetch_price():
-    params = {
-        "inputCoin": BASE_TOKEN,
-        "outputCoin": QUOTE_TOKEN,
-        "amount": "100000000"
+def should_trade(price_now, reference_price):
+    change_percent = ((price_now - reference_price) / reference_price) * 100
+    return abs(change_percent) >= TRADE_THRESHOLD_PERCENT, change_percent
+
+def simulate_trade(price_now, change_percent):
+    decision = "BUY" if change_percent < 0 else "SELL"
+    target = price_now * (1 + TAKE_PROFIT_PERCENT / 100)
+    stop = price_now * (1 - STOP_LOSS_PERCENT / 100)
+    return {
+        "action": decision,
+        "price": price_now,
+        "change": change_percent,
+        "take_profit": round(target, 4),
+        "stop_loss": round(stop, 4)
     }
-    try:
-        response = requests.get(CETUS_API_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
-        return float(data["data"]["estimatedAmountOut"]) / 1e9
-    except Exception as e:
-        return None
 
-# === SIMPLE STRATEGY ===
-def analyze_trend(prices):
-    if len(prices) < 3:
-        return "Not enough data"
-    if prices[-1] < min(prices[-3:-1]) * 0.98:
-        return f"📉 BUY signal at {prices[-1]:.5f} SUI"
-    elif prices[-1] > max(prices[-3:-1]) * 1.02:
-        return f"📈 SELL signal at {prices[-1]:.5f} SUI"
-    else:
-        return f"🤖 HOLD — Latest price: {prices[-1]:.5f} SUI"
-
-# === MAIN ENTRY FOR TELEGRAM ===
 def execute_trade_logic():
-    prices = []
+    try:
+        price = get_price_from_cetus()
+        reference_price = price * (1 - (TRADE_THRESHOLD_PERCENT / 100 + 0.01))  # simulated ref
+        do_trade, change = should_trade(price, reference_price)
 
-    # Simulate recent history
-    for _ in range(3):
-        p = fetch_price()
-        if p:
-            prices.append(p)
+        if ENABLE_LUNAR_MODE:
+            phase = moon_phase_today()
+        else:
+            phase = None
 
-    if not prices or len(prices) < 3:
-        return "⚠️ Not enough price data to analyze."
+        if do_trade:
+            result = simulate_trade(price, change)
+            if ALERTS_ONLY_MODE:
+                return f"🔔 ALERT ONLY\nPrice: ${price:.4f} | Δ {change:.2f}%\nAction: {result['action']}\nTP: {result['take_profit']} | SL: {result['stop_loss']}"
+            else:
+                return f"✅ TRADE EXECUTED\nPrice: ${price:.4f} | Δ {change:.2f}%\nAction: {result['action']}\nTP: {result['take_profit']} | SL: {result['stop_loss']}"
+        else:
+            return f⚠️ No trade signal. Price: ${price:.4f} | Δ {change:.2f}%"
 
-    return analyze_trend(prices)
+    except Exception as e:
+        return f"❌ Trade error: {e}"
 
