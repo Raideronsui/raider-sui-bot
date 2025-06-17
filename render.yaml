@@ -1,2 +1,11 @@
-entrypoint: gunicorn trading_bot:app
-pythonVersion: 3.11.6
+services:
+  - type: web
+    name: raider-sui-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn trading_bot:app
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
