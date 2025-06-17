@@ -70,7 +70,7 @@ def execute_trade_logic():
         if do_trade:
             result = simulate_trade(price, change)
             mode = "🔔 ALERT ONLY" if ALERTS_ONLY_MODE else "✅ TRADE EXECUTED"
-            response = f"{mode}
+            response = f"{mode}"
 Price: ${price:.4f} | Δ {result['change']}%
 Action: {result['action']}
 TP: {result['take_profit']} | SL: {result['stop_loss']}"
