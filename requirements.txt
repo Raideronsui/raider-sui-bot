@@ -3,6 +3,3 @@ flask
 gunicorn
 requests
 python-dotenv
-apscheduler
-httpx
-
