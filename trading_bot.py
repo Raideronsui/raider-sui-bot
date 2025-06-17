@@ -6,7 +6,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 import asyncio
 from sui_trader import execute_trade_logic
-await update.message.reply_text("✅ Raider Bot Activated!")
 
 # Load .env
 load_dotenv()
