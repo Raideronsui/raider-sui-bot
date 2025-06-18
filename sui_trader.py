@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from config import from config import (
+from config import (
     get_threshold,
     get_take_profit,
     get_stop_loss,
