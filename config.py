@@ -80,3 +80,6 @@ def validate_env():
         print(f"⚠️ Missing required environment variables: {', '.join(missing)}")
 
 validate_env()
+
+def get_alerts_only():
+    return os.getenv("ALERTS_ONLY_MODE", "False").lower() == "true"
