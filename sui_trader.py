@@ -2,13 +2,14 @@ import os
 import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from config import (
-    TRADE_THRESHOLD_PERCENT,
-    TAKE_PROFIT_PERCENT,
-    STOP_LOSS_PERCENT,
-    ALERTS_ONLY_MODE,
-    ENABLE_LUNAR_MODE,
+from config import from config import (
+    get_threshold,
+    get_take_profit,
+    get_stop_loss,
+    is_alerts_only_mode,
+    is_lunar_mode_enabled,
 )
+
 
 # === CETUS PRICE FETCH ===
 def get_price_from_cetus():
