@@ -1,26 +1,21 @@
+
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# === Fallback defaults ===
-DEFAULT_THRESHOLD = 5.0
-DEFAULT_TAKE_PROFIT = 10.0
-DEFAULT_STOP_LOSS = 5.0
+# === ENV-DRIVEN CONFIG DEFAULTS ===
+def parse_bool(value):
+    return str(value).lower() in ["true", "1", "yes"]
 
-# === Configurable Trading Parameters ===
-threshold_percent = float(os.getenv("TRADE_THRESHOLD_PERCENT", DEFAULT_THRESHOLD))
-take_profit_percent = float(os.getenv("TAKE_PROFIT_PERCENT", DEFAULT_TAKE_PROFIT))
-stop_loss_percent = float(os.getenv("STOP_LOSS_PERCENT", DEFAULT_STOP_LOSS))
+# === Globals for Dynamic Config ===
+threshold_percent = float(os.getenv("TRADE_THRESHOLD_PERCENT", 5))
+take_profit_percent = float(os.getenv("TAKE_PROFIT_PERCENT", 10))
+stop_loss_percent = float(os.getenv("STOP_LOSS_PERCENT", 5))
+alert_mode = parse_bool(os.getenv("ALERTS_ONLY_MODE", "False"))
+lunar_mode = parse_bool(os.getenv("ENABLE_LUNAR_MODE", "False"))
 
-def set_threshold(value):
-    global threshold_percent
-    try:
-        threshold_percent = float(value)
-        return f"✅ Threshold set to {threshold_percent}%"
-    except ValueError:
-        return "❌ Invalid threshold. Please enter a number."
-
+# === Accessors ===
 def get_threshold():
     return threshold_percent
 
@@ -30,9 +25,58 @@ def get_take_profit():
 def get_stop_loss():
     return stop_loss_percent
 
-# === Optional Modes ===
-def get_alerts_only():
-    return os.getenv("ALERTS_ONLY_MODE", "False").lower() == "true"
+def is_alerts_only_mode():
+    return alert_mode
 
-def get_lunar_mode():
-    return os.getenv("ENABLE_LUNAR_MODE", "False").lower() == "true"
+def is_lunar_mode_enabled():
+    return lunar_mode
+
+# === Dynamic Setters ===
+def set_threshold(value):
+    global threshold_percent
+    try:
+        threshold_percent = float(value)
+        return f"✅ Threshold set to {threshold_percent}%"
+    except ValueError:
+        return "❌ Invalid threshold. Please enter a number."
+
+def set_alert_mode(value: str):
+    global alert_mode
+    if value.lower() in ["true", "false"]:
+        alert_mode = value.lower() == "true"
+        return f"✅ Alerts-only mode set to {alert_mode}"
+    return "❌ Invalid value. Use true or false."
+
+def set_take_profit(value):
+    global take_profit_percent
+    try:
+        take_profit_percent = float(value)
+        return f"✅ Take-profit set to {take_profit_percent}%"
+    except ValueError:
+        return "❌ Invalid value. Please enter a number."
+
+def set_stop_loss(value):
+    global stop_loss_percent
+    try:
+        stop_loss_percent = float(value)
+        return f"✅ Stop-loss set to {stop_loss_percent}%"
+    except ValueError:
+        return "❌ Invalid value. Please enter a number."
+
+def set_lunar_mode(value: str):
+    global lunar_mode
+    if value.lower() in ["true", "false"]:
+        lunar_mode = value.lower() == "true"
+        return f"🌕 Lunar mode set to {lunar_mode}"
+    return "❌ Invalid value. Use true or false."
+
+# === Validation Logging (optional) ===
+def validate_env():
+    keys = [
+        "SUI_PRIVATE_KEY", "SUI_RPC_URL", "CETUS_API", "BOT_TOKEN", "CHAT_ID"
+    ]
+    missing = [k for k in keys if not os.getenv(k)]
+    if missing:
+        print(f"⚠️ Missing required environment variables: {', '.join(missing)}")
+
+validate_env()
