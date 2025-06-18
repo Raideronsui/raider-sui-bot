@@ -83,3 +83,6 @@ validate_env()
 
 def get_alerts_only():
     return os.getenv("ALERTS_ONLY_MODE", "False").lower() == "true"
+
+def is_alerts_only():
+    return get_alerts_only()
