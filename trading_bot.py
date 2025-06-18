@@ -4,7 +4,7 @@ from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from config import (
-<<<<<<< HEAD
+
     BOT_TOKEN,
     set_threshold,
     get_threshold_percent,
@@ -12,11 +12,11 @@ from config import (
     get_alerts_only,
     set_moon_mode,
     get_moon_mode,
-=======
+
     set_threshold, get_threshold,
     set_alert_mode, is_alerts_only,
     set_moon_mode, is_moon_mode, get_alerts_only
->>>>>>> 5ee2733 (WIP: Save local changes before rebase)
+
 )
 from sui_trader import execute_trade_logic
 
