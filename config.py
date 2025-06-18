@@ -1,6 +1,6 @@
 import os
-import logging
 from dotenv import load_dotenv
+load_dotenv()
 
 # Load environment variables from .env file
 load_dotenv()
@@ -42,8 +42,13 @@ def get_webhook_url():
     return os.getenv("WEBHOOK_URL", "")
 
 # === TRADING SETTINGS ===
-def get_threshold_percent():
-    return _get_env_float("TRADE_THRESHOLD_PERCENT", 5.0)
+def set_threshold(value):
+    try:
+        float_value = float(value)
+        os.environ["THRESHOLD_PERCENT"] = str(float_value)
+        return float_value
+    except ValueError:
+        raise ValueError("Invalid value for THRESHOLD_PERCENT: must be a number")
 
 def get_take_profit():
     return _get_env_float("TAKE_PROFIT_PERCENT", 10.0)
