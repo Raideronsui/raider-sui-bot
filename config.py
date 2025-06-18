@@ -28,7 +28,7 @@ def get_stop_loss():
 def is_alerts_only_mode():
     return alert_mode
 
-def is_lunar_mode_enabled():
+def get_lunar_mode():
     return lunar_mode
 
 # === Dynamic Setters ===
