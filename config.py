@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 # === ENV-DRIVEN CONFIG DEFAULTS ===
 def parse_bool(value):
     return str(value).lower() in ["true", "1", "yes"]
