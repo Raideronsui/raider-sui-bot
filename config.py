@@ -17,8 +17,8 @@ alert_mode = parse_bool(os.getenv("ALERTS_ONLY_MODE", "False"))
 lunar_mode = parse_bool(os.getenv("ENABLE_LUNAR_MODE", "False"))
 
 # === Accessors ===
-def get_threshold():
-    return threshold_percent
+def get_threshold_percent():
+    return float(os.getenv("THRESHOLD_PERCENT", 2.0))
 
 def get_take_profit():
     return take_profit_percent
