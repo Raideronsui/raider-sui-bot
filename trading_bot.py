@@ -1,93 +1,81 @@
+import logging
 import os
-import asyncio
-from flask import Flask, request
+from flask import Flask
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    ContextTypes,
-)
-from dotenv import load_dotenv
-from sui_trader import execute_trade_logic
+from telegram.ext import Application, CommandHandler, ContextTypes
 from config import (
-    set_threshold, get_threshold,
-    set_alert_mode, is_alerts_only,
-    set_moon_mode, is_moon_mode
+    BOT_TOKEN,
+    set_threshold,
+    get_threshold_percent,
+    set_alert_mode,
+    get_alerts_only,
+    set_moon_mode,
+    get_moon_mode,
 )
+from sui_trader import execute_trade_logic
 
-# === Load environment variables ===
-load_dotenv()
-TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_PATH = "/webhook"
-WEBHOOK_URL = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}{WEBHOOK_PATH}"
+logging.basicConfig(level=logging.INFO)
+app = Flask(__name__)
+application = Application.builder().token(BOT_TOKEN).build()
 
-# === Flask app ===
-flask_app = Flask(__name__)
-telegram_app = ApplicationBuilder().token(TOKEN).build()
+@app.route("/")
+def home():
+    return "✅ Raider SUI Bot is live!"
 
-# === Telegram commands ===
+# --- Telegram Commands ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Raider SUI Bot Activated!")
+    await update.message.reply_text("👋 Welcome to Raider SUI Trading Bot!")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    help_text = (
-        "/start - Start or restart Raider Bot\n"
-        "/help - Show this help message\n"
-        "/trade - Execute a swing trade\n"
-        "/price - Get current SUI/USDT price\n"
-        "/set_threshold <percent> - Set trigger threshold\n"
-        "/alerts_on or /alerts_off - Enable or disable alerts-only mode\n"
-        "/moon_on or /moon_off - Toggle lunar mode\n"
-        "/credit - Check your balance"
+    await update.message.reply_text(
+        "/start - Welcome message\n"
+        "/help - List commands\n"
+        "/price - Show SUI price and trade info\n"
+        "/threshold <value> - Set trade threshold %\n"
+        "/alertson /alertsoff - Toggle alerts-only mode\n"
+        "/moonon /moonoff - Toggle moon mode\n"
+        "/credit - View wallet info\n"
     )
-    await update.message.reply_text(help_text)
 
-async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = await asyncio.to_thread(execute_trade_logic)
-    await update.message.reply_text(result)
+async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = execute_trade_logic()
+    await update.message.reply_text(msg)
 
-async def set_threshold_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        value = float(context.args[0])
-        set_threshold(update.effective_user.id, value)
-        await update.message.reply_text(f"📊 Threshold set to {value}%")
-    except (IndexError, ValueError):
-        await update.message.reply_text("Usage: /set_threshold <percent>")
+async def credit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🔑 Wallet and RPC bound.")
 
-async def alerts_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    set_alert_mode(update.effective_user.id, True)
-    await update.message.reply_text("🔔 Alerts-only mode enabled.")
+async def threshold(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.args:
+        value = context.args[0]
+        result = set_threshold(value)
+        await update.message.reply_text(result)
+    else:
+        await update.message.reply_text(f"Current threshold: {get_threshold_percent()}%")
 
-async def alerts_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    set_alert_mode(update.effective_user.id, False)
-    await update.message.reply_text("🔕 Alerts-only mode disabled.")
+async def alertson(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(set_alert_mode(True))
 
-async def moon_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    set_moon_mode(update.effective_user.id, True)
-    await update.message.reply_text("🌕 Lunar mode enabled.")
+async def alertsoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(set_alert_mode(False))
 
-async def moon_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    set_moon_mode(update.effective_user.id, False)
-    await update.message.reply_text("🌑 Lunar mode disabled.")
+async def moonon(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(set_moon_mode(True))
 
-# === Add handlers ===
-telegram_app.add_handler(CommandHandler("start", start))
-telegram_app.add_handler(CommandHandler("help", help_command))
-telegram_app.add_handler(CommandHandler("trade", trade))
-telegram_app.add_handler(CommandHandler("set_threshold", set_threshold_cmd))
-telegram_app.add_handler(CommandHandler("alerts_on", alerts_on))
-telegram_app.add_handler(CommandHandler("alerts_off", alerts_off))
-telegram_app.add_handler(CommandHandler("moon_on", moon_on))
-telegram_app.add_handler(CommandHandler("moon_off", moon_off))
+async def moonoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(set_moon_mode(False))
 
-# === Webhook route ===
-@flask_app.post(WEBHOOK_PATH)
-async def webhook():
-    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
-    await telegram_app.process_update(update)
-    return "OK", 200
+# --- Register Commands ---
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("help", help_command))
+application.add_handler(CommandHandler("price", price))
+application.add_handler(CommandHandler("credit", credit))
+application.add_handler(CommandHandler("threshold", threshold))
+application.add_handler(CommandHandler("alertson", alertson))
+application.add_handler(CommandHandler("alertsoff", alertsoff))
+application.add_handler(CommandHandler("moonon", moonon))
+application.add_handler(CommandHandler("moonoff", moonoff))
 
-# === Entrypoint ===
 if __name__ == "__main__":
-    flask_app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
+    import threading
+    threading.Thread(target=application.run_polling).start()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
