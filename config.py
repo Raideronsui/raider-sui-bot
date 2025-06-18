@@ -86,3 +86,12 @@ def get_alerts_only():
 
 def is_alerts_only():
     return get_alerts_only()
+moon_mode = os.getenv("MOON_MODE", "false").lower() == "true"
+
+def set_moon_mode(value):
+    global moon_mode
+    moon_mode = str(value).lower() == "true"
+    return f"🌕 Moon Mode set to {'ON' if moon_mode else 'OFF'}"
+
+def is_moon_mode():
+    return moon_mode
