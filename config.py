@@ -1,39 +1,26 @@
-# config.py
-
-from collections import defaultdict
-
-# In-memory user settings (for testing — should be stored in a database in production)
-user_thresholds = defaultdict(lambda: 5.0)  # Default to 5%
-user_alert_mode = defaultdict(lambda: False)
-user_moon_mode = defaultdict(lambda: False)
-
-# === Threshold ===
-def set_threshold(user_id: int, value: float):
-    user_thresholds[user_id] = value
-
-def get_threshold(user_id: int) -> float:
-    return user_thresholds[user_id]
-
-# === Alerts Only Mode ===
-def set_alert_mode(user_id: int, enabled: bool):
-    user_alert_mode[user_id] = enabled
-
-def is_alerts_only(user_id: int) -> bool:
-    return user_alert_mode[user_id]
-
-# === Lunar Mode ===
-def set_moon_mode(user_id: int, enabled: bool):
-    user_moon_mode[user_id] = enabled
-
-def is_moon_mode(user_id: int) -> bool:
-    return user_moon_mode[user_id]
-
-from datetime import time
 import os
+from dotenv import load_dotenv
 
-def parse_time_string(t: str) -> time:
-    hour, minute = map(int, t.split(":"))
-    return time(hour=hour, minute=minute)
+load_dotenv()
 
-SCHEDULED_TRADE_TIME_EST = parse_time_string(os.getenv("SCHEDULED_TRADE_TIME_EST", "09:00"))
+# === SUI / Cetus Trading Config ===
+SUI_PRIVATE_KEY = os.getenv("SUI_PRIVATE_KEY")
+SUI_RPC_URL = os.getenv("SUI_RPC_URL", "https://fullnode.mainnet.sui.io")
+CETUS_API = os.getenv("CETUS_API", "https://api-sui.cetus.zone")
+
+# === Trading Logic Parameters ===
+TRADE_THRESHOLD_PERCENT = float(os.getenv("TRADE_THRESHOLD_PERCENT", 5))
+TAKE_PROFIT_PERCENT = float(os.getenv("TAKE_PROFIT_PERCENT", 10))
+STOP_LOSS_PERCENT = float(os.getenv("STOP_LOSS_PERCENT", 5))
+
+ALERTS_ONLY_MODE = os.getenv("ALERTS_ONLY_MODE", "False").lower() == "true"
+ENABLE_LUNAR_MODE = os.getenv("ENABLE_LUNAR_MODE", "False").lower() == "true"
+
+# === Scheduler Defaults ===
+SCHEDULED_INTERVAL_HOURS = int(os.getenv("SCHEDULED_INTERVAL_HOURS", 6))
+SCHEDULED_TRADE_TIME_UTC = os.getenv("SCHEDULED_TRADE_TIME_UTC", "09:00")
+
+# === Telegram Bot Settings ===
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
