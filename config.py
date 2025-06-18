@@ -29,8 +29,8 @@ def get_stop_loss():
 def is_alerts_only_mode():
     return alert_mode
 
-def get_lunar_mode():
-    return lunar_mode
+def get_moon_mode():
+    return os.getenv("MOON_MODE", "false").lower() == "true"
 
 # === Dynamic Setters ===
 def set_threshold(value):
