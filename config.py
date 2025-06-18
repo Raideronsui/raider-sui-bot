@@ -50,3 +50,5 @@ def get_threshold():
 # === Schedule Settings ===
 SCHEDULED_INTERVAL_HOURS = int(os.getenv("SCHEDULED_INTERVAL_HOURS", 6))
 SCHEDULED_TRADE_TIME_UTC = os.getenv("SCHEDULED_TRADE_TIME_UTC", "09:00")
+
+d652510 (Fix: Add working set_threshold and config validation)
